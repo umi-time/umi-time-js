@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    /* ----------------------------------------------------
+     *  Core module + target settings for ESM + Jest + tsup
+     * -------------------------------------------------- */
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    /* ----------------------------------------------------
+     *  TypeScript strictness + interop
+     * -------------------------------------------------- */
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* ----------------------------------------------------
+     *  Vitest type definitions
+     * -------------------------------------------------- */
+    "types": ["vitest"],
+
+    /* ----------------------------------------------------
+     *  Project structure
+     * -------------------------------------------------- */
+    "rootDir": "src",
+    "outDir": "dist",
+
+    /* ----------------------------------------------------
+     *  Useful extras
+     * -------------------------------------------------- */
+    "resolveJsonModule": true
+  },
+
+  /* ------------------------------------------------------
+   *  Included source files
+   * ---------------------------------------------------- */
+  "include": ["src", "**/*.test.ts"],
+
+  /* ------------------------------------------------------
+   *  Excluded output + dependencies
+   * ---------------------------------------------------- */
+  "exclude": ["dist", "node_modules"]
+}
