@@ -1,0 +1,5 @@
+.github/
+tests/
+.gitignore
+.npmignore
+README.md (Keep if you want it displayed on npmjs.com)
