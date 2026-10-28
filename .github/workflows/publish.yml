@@ -4,6 +4,10 @@ on:
   release:
     types: [published]
 
+permissions:
+  id-token: write  # Critical requirement for OIDC authentication
+  contents: read   # Required to read repository code checkout
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -11,19 +15,20 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://npmjs.org'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
         run: npm ci
 
+      - name: Compile and Build Package
+        run: npm run build --if-present
+
       - name: Run Quality Verification Tests
         run: npm test
 
-      - name: Publish Package to npm Registry
+      - name: Publish Package via Trusted Publishing
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
