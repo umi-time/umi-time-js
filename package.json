@@ -4,7 +4,7 @@
   "description": "Umi‑Time: a JavaScript library implementing the Umi‑Time standard — a locally aware presentation of UTC — including umi conversion, formatting, and solar‑geometry helpers.",
   "author": "Daniel Brannon <contact@umitime.com> and Umi-Time contributors",
   "bugs": {
-    "url": "https://github.com",
+    "url": "https://github.com/umi-time/umi-time-js/issues",
     "email": "security@umitime.com"
   },
   "license": "MIT",

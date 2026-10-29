@@ -8,6 +8,11 @@ export default defineConfig([
     dts: true,
     clean: true,
     minify: true,
+    outExtension({ format }) {
+      return {
+        js: format === 'cjs' ? '.cjs' : '.js',
+      };
+    },
   },
   // Pass 2: Build the standalone client file (IIFE)
   {
