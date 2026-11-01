@@ -20,6 +20,10 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+          
+      # Upgrade npm globally to support staged publishing
+      - name: Upgrade npm CLI
+        run: npm i -g npm@11.15.0          
 
       - name: Install Dependencies
         run: npm ci
@@ -30,5 +34,5 @@ jobs:
       - name: Run Quality Verification Tests
         run: npm test
 
-      - name: Publish Package via Trusted Publishing
-        run: npm publish
+      - name: Stage Package via Trusted Publishing
+        run: npm stage publish
