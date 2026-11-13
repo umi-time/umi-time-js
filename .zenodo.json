@@ -1,0 +1,35 @@
+{
+  "title": "umi-time-js: Reference JavaScript/TypeScript Implementation of Umi-Time",
+  "upload_type": "software",
+  "description": "Official JavaScript and TypeScript reference implementation of the Umi-Time specification. Provides an immutable UmiTime class together with exact UTC-to-umi transformations, ISO 8601-compatible formatting and strict parsing, longitude-based local interpretation, and self-contained astronomical solar-geometry calculations defined by the Umi-Time specification.",
+  "creators": [
+    {
+      "name": "Brannon, Daniel",
+      "affiliation": "Umi-Time Project"
+    }
+  ],
+  "license": "mit",
+  "keywords": [
+    "time",
+    "Umi-Time",
+    "time-standard",
+    "temporal-standard",
+    "UTC",
+    "chronometry",
+    "timekeeping",
+    "JavaScript",
+    "TypeScript",
+    "solar-geometry",
+    "solar-time",
+    "reference-implementation"
+  ],
+  "related_identifiers": [
+    {
+      "relation": "references",
+      "identifier": "10.5281/zenodo.24152725",
+      "scheme": "doi",
+      "resource_type": "publication-technicalnote"
+    }
+  ],
+  "language": "eng"
+}

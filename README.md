@@ -1,5 +1,7 @@
 # Umi‑Time JavaScript Library
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24184935.svg)](https://doi.org/10.5281/zenodo.24184935)
+
 `umi-time-js` is the official JavaScript reference implementation of **Umi‑Time**, a presentation layer based on the UTC time-standard.  
 It provides:
 
@@ -41,7 +43,7 @@ This library is published to npm under the name `umi-time`.
 ### Basic UTC → Umi‑Time
 
 ```ts
-import { UmiTime } from "umi-time-js";
+import { UmiTime } from "umi-time";
 
 const utc = new Date(Date.UTC(2026, 11, 1, 9, 34, 56));
 const umi = new UmiTime(utc);
@@ -110,25 +112,27 @@ and are used internally by `UmiTime`.
 
 ### Project Structure
 
-```
+```text
 umi-time-js/
-  UmiTime.ts            ← Public API
-  UmiTime.test.ts       ← Main test suite
+  src/
+    index.ts              ← Public entry point & package exports
+    UmiTime.ts            ← Main UmiTime class
+    UmiTime.test.ts       ← Main test suite
 
-  core/                 ← UTᵘ math, formatting constants, errors
-    format/constants.ts
-    types/ApproximateValue.ts
-    utils/errors.ts
+    core/                 ← UTᵘ math, formatting constants, errors
+      format/constants.ts
+      types/ApproximateValue.ts
+      utils/errors.ts
 
-  solar/                ← Solar geometry subsystem
-    core/
-    utils/
+    solar/                ← Solar geometry subsystem
+      core/
+      utils/
 
-  README.md             ← (this file)
+  README.md               ← (this file)
 ```
 
-Only `UmiTime.ts` is intended for direct use by consumers.
-The `core/` and `solar/` folders contain internal implementation modules.
+Consumers should import from the package root (`umi-time`), which re-exports `UmiTime` along with public constants, types, error classes, and solar utilities from `src/index.ts`.
+Internal modules inside `core/` and `solar/` are not intended for direct deep imports.
 
 ### Test Vectors
 The library includes a full suite of:
