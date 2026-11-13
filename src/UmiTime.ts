@@ -276,7 +276,6 @@ export class UmiTime {
       str = str.slice(1);
     }
 
-    let umi: number = 0;
     let second: number = 0;
     let fractionalSecond: number = 0;
     let fractionalLength: number = 0;
@@ -292,7 +291,7 @@ export class UmiTime {
     if (!umiMatch) {
       throw new ParseError(`Expected Umi-Time umi portion in "${input}"`);
     }
-    umi = Number(umiMatch[1]);
+    const umi = Number(umiMatch[1]);
     str = str.slice(umiMatch[0].length);
 
     // Remove the optional ':' if present (for extended format)
@@ -323,53 +322,60 @@ export class UmiTime {
       // The next character will determine which type of suffix is present (if any)
     if (str.length > 0) {
       const nextChar = str.charAt(0);
+      const SEG_RE = /S(\d+\/\d+)/;
+      const PHASE_RE = /P(\d+)/;
+      const LON_RE = /([+-]\d{1,3})$/;
+
       switch (nextChar) {
         case "-":
         case "+":
-          // -------------------------------------------------------
-          // Extract longitude suffix (+123 or -045)
-          // -------------------------------------------------------
-          const LON_RE = /([+-]\d{1,3})$/;
+          {
+            // -------------------------------------------------------
+            // Extract longitude suffix (+123 or -045)
+            // -------------------------------------------------------
 
-          const lonMatch = str.match(LON_RE);
-          if (lonMatch) {
-            explicitLongitude = Number(lonMatch[1]);
+            const lonMatch = str.match(LON_RE);
+            if (lonMatch) {
+              explicitLongitude = Number(lonMatch[1]);
+            }
           }
           break;
 
         case "P":
-          // -------------------------------------------------------
-          // Extract day phase suffix
-          // -------------------------------------------------------
-          const PHASE_RE = /P(\d+)/;
-          const phaseMatch = str.match(PHASE_RE);
-          if (phaseMatch) {
-            phase = Number(phaseMatch[1]);
-            if (phase < 0 || phase > 23) {
-              throw new ParseError(`Invalid day phase "${phase}" in "${input}"`);
+          {
+            // -------------------------------------------------------
+            // Extract day phase suffix
+            // -------------------------------------------------------
+            const phaseMatch = str.match(PHASE_RE);
+            if (phaseMatch) {
+              phase = Number(phaseMatch[1]);
+              if (phase < 0 || phase > 23) {
+                throw new ParseError(`Invalid day phase "${phase}" in "${input}"`);
+              }
+              maxRefinement = 15;
+              str = str.slice(phaseMatch[0].length);
             }
-            maxRefinement = 15;
-            str = str.slice(phaseMatch[0].length);
           }
           break;
 
         case "S":
-          // -------------------------------------------------------
-          // Extract segment suffix
-          // -------------------------------------------------------
-          const SEG_RE = /S(\d+\/\d+)/;
-          const segMatch = str.match(SEG_RE);
-          if (segMatch) {
-            const [indexStr, totalStr] = segMatch[1].split("/");
-            segment = { index: Number(indexStr), total: Number(totalStr) };
-            if (segment.index < 0 || segment.index >= segment.total) {
-              throw new ParseError(`Invalid segment "${segment.index}/${segment.total}" in "${input}"`);
+          {
+            // -------------------------------------------------------
+            // Extract segment suffix
+            // -------------------------------------------------------
+            const segMatch = str.match(SEG_RE);
+            if (segMatch) {
+              const [indexStr, totalStr] = segMatch[1].split("/");
+              segment = { index: Number(indexStr), total: Number(totalStr) };
+              if (segment.index < 0 || segment.index >= segment.total) {
+                throw new ParseError(`Invalid segment "${segment.index}/${segment.total}" in "${input}"`);
+              }
+              if (segment.total < 2 || (360 % segment.total !== 0)) {
+                throw new ParseError(`Invalid segment total "${segment.total}" in "${input}"`);
+              }
+              maxRefinement = 360 / segment.total;
+              str = str.slice(segMatch[0].length);
             }
-            if (segment.total < 2 || (360 % segment.total !== 0)) {
-              throw new ParseError(`Invalid segment total "${segment.total}" in "${input}"`);
-            }
-            maxRefinement = 360 / segment.total;
-            str = str.slice(segMatch[0].length);
           }
           break;
 

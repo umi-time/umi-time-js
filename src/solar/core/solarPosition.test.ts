@@ -133,5 +133,23 @@ describe("Solar position calculations", () => {
       expect(pos.altitude).toBeGreaterThan(40);
       expect(pos.altitude).toBeLessThan(90);
     });
+
+    it("reflects the equation of time offset at clock noon on the prime meridian", () => {
+      const pos = getSolarPosition(equinox2020Noon, 0, 0);
+
+      // At 12:00 UTC on 0° longitude, true solar time is 12:00 + EOT.
+      // Since EOT ≈ -7.44 min, the sun has not yet reached the meridian (negative hour angle).
+      const expectedHourAngle = (equinoxEOT / 4); // 15° per hour = 0.25° per minute
+      expect(pos.hourAngle).toBeCloseTo(expectedHourAngle, 1);
+      expect(pos.azimuth).toBeLessThan(180); // Still slightly east of due south before solar noon
+    });
+
+    it("matches getHourAngle at non-zero longitudes", () => {
+      const lon = -120.64; // e.g., Pismo Beach / Pacific meridian
+      const pos = getSolarPosition(summerSolstice2020, 35.14, lon);
+      const expectedHA = getHourAngle(summerSolstice2020, lon);
+
+      expect(pos.hourAngle).toBeCloseTo(expectedHA, 5);
+    });
   });
 });
