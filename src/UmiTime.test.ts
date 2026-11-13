@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { UmiTime } from "./UmiTime";
 import {
   UMI_COMPACT,

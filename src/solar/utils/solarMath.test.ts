@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { toRad, toDeg, dayOfYear } from "./solarMath";
 
 describe("solarMath utilities", () => {
