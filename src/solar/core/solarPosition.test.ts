@@ -133,5 +133,32 @@ describe("Solar position calculations", () => {
       expect(pos.altitude).toBeGreaterThan(40);
       expect(pos.altitude).toBeLessThan(90);
     });
+
+    it("reflects the equation of time offset at clock noon on the prime meridian", () => {
+      const pos = getSolarPosition(equinox2020Noon, 0, 0);
+      const umi = utUmiFromDate(equinox2020Noon);
+      const expectedHA = getHourAngle(umi, 0, equinoxEOT);
+      const solarAlt = solarAltitude(0, equinoxDeclination, expectedHA);
+      const solarAz = solarAzimuth(0, equinoxDeclination, solarAlt, expectedHA);
+
+      // At 12:00 UTC on 0° longitude, EOT (≈ -7.3 min) means solar noon hasn't occurred yet
+      expect(expectedHA).toBeCloseTo(equinoxEOT / 4, 1);
+      expect(pos.altitude).toBeCloseTo(solarAlt, 5);
+      expect(pos.azimuth).toBeCloseTo(solarAz, 5);
+    });
+
+    it("matches getHourAngle at non-zero longitudes", () => {
+      const lon = -120.64;
+      const lat = 35.14;
+      const pos = getSolarPosition(equinox2020Noon, lat, lon);
+      const umi = utUmiFromDate(equinox2020Noon);
+      const expectedHA = getHourAngle(umi, lon, equinoxEOT);
+      const decl = getSolarDeclination(equinox2020Noon);
+      const solarAlt = solarAltitude(lat, decl, expectedHA);
+      const solarAz = solarAzimuth(lat, decl, solarAlt, expectedHA);
+
+      expect(pos.altitude).toBeCloseTo(solarAlt, 5);
+      expect(pos.azimuth).toBeCloseTo(solarAz, 5);
+    });
   });
 });

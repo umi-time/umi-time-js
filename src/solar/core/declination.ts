@@ -82,7 +82,6 @@ export function getSolarDeclination(date: Date): number {
 
   const L0 = solarMeanLongitude(T);
   const M = solarMeanAnomaly(T);
-  const e = earthOrbitEccentricity(T);
   const C = equationOfCenter(M, T);
   const lambda = eclipticLongitude(L0, C);
   const lambdaSun = apparentLongitude(lambda, T);
