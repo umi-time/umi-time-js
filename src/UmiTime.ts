@@ -14,15 +14,26 @@ import { getEquationOfTime } from "./solar/core/equationOfTime";
 import { getSolarPosition } from "./solar/core/solarPosition";
 import { getSunriseUT, getSunsetUT, UTToDate } from "./solar/core/solarEvents";
 
-// -----------------------------------------------------------------------------
-// UmiTime Class
-// -----------------------------------------------------------------------------
-
+/**
+ * Represents a moment in Umi-Time.
+ *
+ * Umi-Time divides a day into 360 "umis", with each umi containing
+ * 240 seconds. An instance stores an exact UTC timestamp together
+ * with approximate geographic coordinates that may be used for
+ * solar calculations and local solar segmentation.
+ */
 export class UmiTime {
   readonly utc: Date;
   readonly latitude: ApproximateValue;
   readonly longitude: ApproximateValue;
 
+  /**
+   * Creates a new UmiTime instance.
+   *
+   * @param utc - UTC timestamp represented by this instance.
+   * @param latitude - Approximate latitude in degrees.
+   * @param longitude - Approximate longitude in degrees.
+   */
   constructor(
     utc: Date,
     latitude: ApproximateValue = { value: 0, uncertainty: 90 },
@@ -37,28 +48,50 @@ export class UmiTime {
   // Derived Umi-time values (from UTC)
   // ---------------------------------------------------------------------------
 
+  /**
+   * UTC year component.
+   */
   get year(): number {
     return this.utc.getUTCFullYear();
   }
+
+  /**
+   * UTC month component (1-12).
+   */
   get month(): number {
     return this.utc.getUTCMonth() + 1;
   }
+
+  /**
+   * UTC day of month component (1-31).
+   */
   get day(): number {
     return this.utc.getUTCDate();
   }
 
+  /**
+   * Umi-Time umi value (0-359).
+   *
+   * One umi corresponds to four UTC minutes.
+   */
   get umi(): number {
     const hours = this.utc.getUTCHours();
     const minutes = this.utc.getUTCMinutes();
     return hours * 15 + Math.floor(minutes / 4);
   }
 
+  /**
+   * Second within the current umi (0-239).
+   */
   get second(): number {
     const minutes = this.utc.getUTCMinutes();
     const seconds = this.utc.getUTCSeconds();
     return (minutes % 4) * 60 + seconds; // 0–239
   }
 
+  /**
+   * Millisecond component of the UTC timestamp.
+   */
   get millisecond(): number {
     return this.utc.getUTCMilliseconds();
   }
@@ -67,14 +100,34 @@ export class UmiTime {
   // Immutability helpers
   // ---------------------------------------------------------------------------
 
+  /**
+   * Returns a new instance with a different UTC timestamp.
+   *
+   * @param utc - New UTC timestamp.
+   * @returns New UmiTime instance.
+   */
   withUTC(utc: Date): UmiTime {
     return new UmiTime(utc, this.latitude, this.longitude);
   }
 
+  /**
+   * Returns a new instance with a different latitude.
+   *
+   * @param value - Latitude in degrees.
+   * @param uncertainty - Latitude uncertainty in degrees.
+   * @returns New UmiTime instance.
+   */
   withLatitude(value: number, uncertainty: number = 0): UmiTime {
     return new UmiTime(this.utc, { value, uncertainty }, this.longitude);
   }
 
+  /**
+   * Returns a new instance with a different longitude.
+   *
+   * @param value - Longitude in degrees.
+   * @param uncertainty - Longitude uncertainty in degrees.
+   * @returns New UmiTime instance.
+   */
   withLongitude(value: number, uncertainty: number = 0): UmiTime {
     return new UmiTime(this.utc, this.latitude, { value, uncertainty });
   }
@@ -83,12 +136,25 @@ export class UmiTime {
   // Segment helpers (best‑estimate, not stored)
   // ---------------------------------------------------------------------------
 
+  /**
+   * Calculates which segment of a circular partition contains
+   * the current local solar time.
+   *
+   * @param total - Number of equal segments.
+   * @returns Zero-based segment index.
+   */
   segmentIndex(total: number): number {
     const width = 360 / total;
     const localSolarTime = this.umi + this.longitude.value;
     return Math.floor((((localSolarTime % 360) + 360) % 360) / width);
   }
 
+  /**
+   * Calculates the offset within the current segment.
+   *
+   * @param total - Number of equal segments.
+   * @returns Distance from the start of the segment in degrees.
+   */
   segmentRefinement(total: number): number {
     const width = 360 / total;
     const index = this.segmentIndex(total);
@@ -101,6 +167,23 @@ export class UmiTime {
   // Formatting
   // ---------------------------------------------------------------------------
 
+  /**
+   * Formats the instance using a Umi-Time format string.
+   *
+   * Supported tokens include:
+   * - yyyy, yy, y
+   * - MM, M
+   * - dd, d
+   * - uuu, u
+   * - sss, s
+   * - SSS, SS, S
+   * - o (Umi symbol)
+   * - G<n> (segment notation)
+   * - + (segment refinement)
+   *
+   * @param spec - Format specification.
+   * @returns Formatted string.
+   */
   format(spec: string): string {
     let out = spec;
 
@@ -136,9 +219,9 @@ export class UmiTime {
     let frac = fractional.toFixed(3).slice(1); // "XYZ"
 
     // Trim any trailing zeros in the fractional part
-    frac = frac.replace(/0+$/, ''); // remove trailing zeros
-    if (frac === '.') {
-      frac = '';
+    frac = frac.replace(/0+$/, ""); // remove trailing zeros
+    if (frac === ".") {
+      frac = "";
     }
     out = out.replace(/SSS/g, frac);
     out = out.replace(/SS/g, frac.slice(0, 3));
@@ -196,14 +279,32 @@ export class UmiTime {
   // Solar geometry
   // ---------------------------------------------------------------------------
 
+  /**
+   * Solar declination angle for the current timestamp.
+   *
+   * @returns Solar declination in degrees.
+   */
   get solarDeclination(): number {
     return getSolarDeclination(this.utc);
   }
 
+  /**
+   * Equation of time for the current timestamp.
+   *
+   * @returns Equation of time value.
+   */
   get equationOfTime(): number {
     return getEquationOfTime(this.utc);
   }
 
+  /**
+   * Apparent solar position at the stored coordinates.
+   *
+   * Requires exact latitude and longitude.
+   *
+   * @returns Solar altitude and azimuth.
+   * @throws {UmiTimeError} If coordinate uncertainty exceeds limits.
+   */
   get solarPosition(): { altitude: number; azimuth: number } {
     this.requireLongitudePrecision(0);
     this.requireLatitudePrecision(0);
@@ -215,6 +316,14 @@ export class UmiTime {
     );
   }
 
+  /**
+   * Sunrise Umi-Time value for the stored coordinates.
+   *
+   * Requires exact latitude and longitude.
+   *
+   * @returns Sunrise UTᵘ.
+   * @throws {UmiTimeError} If coordinate uncertainty exceeds limits.
+   */
   get sunrise(): number {
     this.requireLongitudePrecision(0);
     this.requireLatitudePrecision(0);
@@ -222,6 +331,14 @@ export class UmiTime {
     return getSunriseUT(this.utc, this.latitude.value, this.longitude.value);
   }
 
+  /**
+   * Sunset Umi-Time value for the stored coordinates.
+   *
+   * Requires exact latitude and longitude.
+   *
+   * @returns Sunset UTᵘ.
+   * @throws {UmiTimeError} If coordinate uncertainty exceeds limits.
+   */
   get sunset(): number {
     this.requireLongitudePrecision(0);
     this.requireLatitudePrecision(0);
@@ -233,6 +350,14 @@ export class UmiTime {
   // Static: Parse Umi‑Time string
   // ---------------------------------------------------------------------------
 
+  /**
+   * Validates parsed Umi-Time components.
+   *
+   * @param umi - Umi value.
+   * @param second - Umi-second value.
+   * @param raw - Original source string.
+   * @throws {ParseError} If values are outside valid ranges.
+   */
   private static validateUmiTime(
     umi: number,
     second: number,
@@ -246,6 +371,38 @@ export class UmiTime {
     }
   }
 
+  /**
+   * Parses a Umi-Time string into a UmiTime instance.
+   *
+   * Supported forms include:
+   *
+   * - U123
+   * - U123:045
+   * - U123:045.5
+   * - 2025-06-01U123:045
+   * - U123+120
+   * - U123P8
+   * - U123P8+3
+   * - U123S4/24
+   * - U123S4/24+2
+   *
+   * When longitude information is omitted, an approximate longitude
+   * is inferred from any segment or phase information present.
+   *
+   * @param input - Umi-Time string to parse.
+   * @param opts - Optional coordinate overrides.
+   * @param opts.latitude - Explicit latitude.
+   * @param opts.longitude - Explicit longitude.
+   * @returns Parsed UmiTime instance.
+   * @throws {ParseError} If the input cannot be parsed.
+   *
+   * @example
+   * const t = UmiTime.parse("2025-06-01U180:120");
+   *
+   * console.log(t.umi);      // 180
+   * console.log(t.second);   // 120
+   * console.log(t.format("yyyy-MM-dd Uuuu:sss"));
+   */
   static parse(
     input: string,
     opts?: { latitude?: number; longitude?: number },
@@ -267,7 +424,9 @@ export class UmiTime {
       // Since we have extracted a date prefix, the remaining string should start with the Umi-Time portion
       // Ensure the remaining string starts with 'U'
       if (!str.startsWith("U")) {
-        throw new ParseError(`Expected Umi-Time portion after date in "${input}"`);
+        throw new ParseError(
+          `Expected Umi-Time portion after date in "${input}"`,
+        );
       }
     }
 
@@ -319,7 +478,7 @@ export class UmiTime {
       str = str.slice(fracMatch[0].length);
     }
 
-      // The next character will determine which type of suffix is present (if any)
+    // The next character will determine which type of suffix is present (if any)
     if (str.length > 0) {
       const nextChar = str.charAt(0);
       const SEG_RE = /S(\d+\/\d+)/;
@@ -350,7 +509,9 @@ export class UmiTime {
             if (phaseMatch) {
               phase = Number(phaseMatch[1]);
               if (phase < 0 || phase > 23) {
-                throw new ParseError(`Invalid day phase "${phase}" in "${input}"`);
+                throw new ParseError(
+                  `Invalid day phase "${phase}" in "${input}"`,
+                );
               }
               maxRefinement = 15;
               str = str.slice(phaseMatch[0].length);
@@ -368,10 +529,14 @@ export class UmiTime {
               const [indexStr, totalStr] = segMatch[1].split("/");
               segment = { index: Number(indexStr), total: Number(totalStr) };
               if (segment.index < 0 || segment.index >= segment.total) {
-                throw new ParseError(`Invalid segment "${segment.index}/${segment.total}" in "${input}"`);
+                throw new ParseError(
+                  `Invalid segment "${segment.index}/${segment.total}" in "${input}"`,
+                );
               }
-              if (segment.total < 2 || (360 % segment.total !== 0)) {
-                throw new ParseError(`Invalid segment total "${segment.total}" in "${input}"`);
+              if (segment.total < 2 || 360 % segment.total !== 0) {
+                throw new ParseError(
+                  `Invalid segment total "${segment.total}" in "${input}"`,
+                );
               }
               maxRefinement = 360 / segment.total;
               str = str.slice(segMatch[0].length);
@@ -381,7 +546,9 @@ export class UmiTime {
 
         default:
           // No recognized suffix
-          throw new ParseError(`Unrecognized suffix "${nextChar}" in "${input}"`);
+          throw new ParseError(
+            `Unrecognized suffix "${nextChar}" in "${input}"`,
+          );
       }
 
       if (str.length > 0 && maxRefinement > 0) {
@@ -393,7 +560,9 @@ export class UmiTime {
         if (refMatch) {
           refinement = Number(refMatch[1]);
           if (refinement >= maxRefinement) {
-            throw new ParseError(`Invalid refinement "${refinement}" in "${input}"`);
+            throw new ParseError(
+              `Invalid refinement "${refinement}" in "${input}"`,
+            );
           }
         }
       }
@@ -436,13 +605,11 @@ export class UmiTime {
         if (refinement) {
           width = 1;
           midpoint = index * segmentWidth + refinement + width / 2;
-        }
-        else {
+        } else {
           width = segmentWidth;
           midpoint = index * width + width / 2;
         }
-      }
-      else if (phase) {
+      } else if (phase) {
         const phaseWidth = 15;
         if (refinement) {
           width = 1;
@@ -451,8 +618,7 @@ export class UmiTime {
           width = phaseWidth;
           midpoint = phase * width + width / 2;
         }
-      }
-      else {
+      } else {
         width = 360;
         midpoint = 0;
       }

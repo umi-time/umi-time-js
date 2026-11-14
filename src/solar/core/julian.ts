@@ -1,5 +1,15 @@
-// Julian Date and Julian Century
+/**
+ * Julian Date and Julian Century helpers for astronomical calculations (Umi‑Time Spec §9.5).
+ *
+ * @module
+ */
 
+/**
+ * Computes the Julian Date (JD) for a given UTC `Date` instant (Spec §9.5.1).
+ *
+ * @param date - UTC `Date` instant.
+ * @returns Continuous count of days since the beginning of the Julian Period.
+ */
 export function getJulianDate(date: Date): number {
   const Y = date.getUTCFullYear();
   const M = date.getUTCMonth() + 1;
@@ -29,6 +39,12 @@ export function getJulianDate(date: Date): number {
   );
 }
 
+/**
+ * Computes Julian centuries (T) elapsed since the J2000.0 epoch (`JD 2451545.0`) (Spec §9.5.2).
+ *
+ * @param date - UTC `Date` instant.
+ * @returns Julian centuries since J2000.0.
+ */
 export function getJulianCentury(date: Date): number {
   const JD = getJulianDate(date);
   return (JD - 2451545.0) / 36525;

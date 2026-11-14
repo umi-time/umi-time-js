@@ -1,14 +1,22 @@
-// solarPosition.ts — Umi‑Time spec solar altitude & azimuth formulas
+/**
+ * Solar position formulas (universal Umi‑Time conversion, solar altitude, and solar azimuth) per Umi‑Time Spec §9.5.
+ *
+ * @module
+ */
 
 import { toRad, toDeg } from "../utils/solarMath";
 import { getSolarDeclination } from "./declination";
 import { getEquationOfTime } from "./equationOfTime";
 import { getHourAngle } from "./hourAngle";
 
-/* -------------------------------------------------------
- *  UTᵘ from Date
- *  UTᵘ = (UTC seconds) / 240
- * ----------------------------------------------------- */
+/**
+ * Converts a UTC `Date` into its fractional universal Umi‑Time value (`UTᵘ`).
+ *
+ * Formula: `UTᵘ = (UTC seconds) / 240`
+ *
+ * @param date - UTC `Date` instant.
+ * @returns Fractional universal Umi‑Time value in umi `[0, 360)`.
+ */
 export function utUmiFromDate(date: Date): number {
   const seconds =
     date.getUTCHours() * 3600 +
@@ -17,15 +25,20 @@ export function utUmiFromDate(date: Date): number {
   return (seconds / 240) % 360;
 }
 
-/* -------------------------------------------------------
- *  9.5.x — Solar Altitude
+/**
+ * Computes the solar altitude angle above the horizon in degrees (Spec §9.5).
  *
- *  sin(alt) = sin φ sin δ + cos φ cos δ cos H
- * ----------------------------------------------------- */
+ * Formula: `sin(alt) = sin φ sin δ + cos φ cos δ cos H`
+ *
+ * @param latitude - Observer latitude in degrees `[-90, 90]`.
+ * @param declination - Solar declination (δ) in degrees.
+ * @param hourAngleDeg - Solar hour angle (H) in degrees.
+ * @returns Solar altitude in degrees `[-90, 90]`.
+ */
 export function solarAltitude(
   latitude: number,
   declination: number,
-  hourAngleDeg: number
+  hourAngleDeg: number,
 ): number {
   const latRad = toRad(latitude);
   const decRad = toRad(declination);
@@ -38,28 +51,30 @@ export function solarAltitude(
   return toDeg(Math.asin(sinAlt));
 }
 
-/* -------------------------------------------------------
- *  9.5.x — Solar Azimuth
+/**
+ * Computes the solar azimuth angle clockwise from true north in degrees (Spec §9.5).
  *
- *  cos(A) = (sin δ − sin φ sin alt) / (cos φ cos alt)
+ * Formula: `cos(A) = (sin δ − sin φ sin alt) / (cos φ cos alt)` (with `A = 360° − A` when `H > 0`).
  *
- *  If H > 0 → A = 360° − A
- * ----------------------------------------------------- */
+ * @param latitude - Observer latitude in degrees `[-90, 90]`.
+ * @param declination - Solar declination (δ) in degrees.
+ * @param altitudeDeg - Solar altitude angle in degrees.
+ * @param hourAngleDeg - Solar hour angle (H) in degrees.
+ * @returns Solar azimuth in degrees `[0, 360)`.
+ */
 export function solarAzimuth(
   latitude: number,
   declination: number,
   altitudeDeg: number,
-  hourAngleDeg: number
+  hourAngleDeg: number,
 ): number {
   const latRad = toRad(latitude);
   const decRad = toRad(declination);
   const altRad = toRad(altitudeDeg);
 
-  const numerator =
-    Math.sin(decRad) - Math.sin(latRad) * Math.sin(altRad);
+  const numerator = Math.sin(decRad) - Math.sin(latRad) * Math.sin(altRad);
 
-  const denominator =
-    Math.cos(latRad) * Math.cos(altRad);
+  const denominator = Math.cos(latRad) * Math.cos(altRad);
 
   const cosAz = numerator / denominator;
 
@@ -76,21 +91,18 @@ export function solarAzimuth(
   return az;
 }
 
-/* -------------------------------------------------------
- *  High-level wrapper: getSolarPosition(date, lat, lon)
+/**
+ * Computes both solar altitude and azimuth in degrees for a given UTC `Date` and geographic coordinates.
  *
- *  Steps:
- *    1. Compute declination δ
- *    2. Compute EoT
- *    3. Compute UTᵘ
- *    4. Compute hour angle H
- *    5. Compute altitude
- *    6. Compute azimuth
- * ----------------------------------------------------- */
+ * @param date - UTC `Date` instant.
+ * @param lat - Observer latitude in degrees `[-90, 90]`.
+ * @param lon - Observer longitude in degrees (east positive, west negative).
+ * @returns Object containing `altitude` and `azimuth` in degrees.
+ */
 export function getSolarPosition(
   date: Date,
   lat: number,
-  lon: number
+  lon: number,
 ): { altitude: number; azimuth: number } {
   const declination = getSolarDeclination(date);
   const eot = getEquationOfTime(date);

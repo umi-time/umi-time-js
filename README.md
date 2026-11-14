@@ -1,6 +1,9 @@
 # Umi‑Time JavaScript Library
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24184935.svg)](https://doi.org/10.5281/zenodo.24184935)
+[![npm version](https://img.shields.io/npm/v/umi-time.svg)](https://npmjs.com/package/umi-time)
+[![JSR](https://jsr.io/badges/@umi-time/umi-time)](https://jsr.io/@umi-time/umi-time)
+[![JSR Score](https://jsr.io/badges/@umi-time/umi-time/score)](https://jsr.io/@umi-time/umi-time)
 
 `umi-time-js` is the official JavaScript reference implementation of **Umi‑Time**, a presentation layer based on the UTC time-standard.  
 It provides:
@@ -15,10 +18,16 @@ The umi-time library is designed to be readable, testable, and easy to port to o
 
 ## Installation
 
-Clone the repository and install development dependencies:
+Install from **npm**:
 
 ```bash
-npm install
+npm install umi-time
+```
+
+Or install from **JSR** (Deno, Node.js, Bun, Cloudflare Workers):
+
+```bash
+npx jsr add @umi-time/umi-time
 ```
 
 ## Building
@@ -45,7 +54,7 @@ This library is published to npm under the name `umi-time`.
 ```ts
 import { UmiTime } from "umi-time";
 
-const utc = new Date(Date.UTC(2026, 11, 1, 9, 34, 56));
+const utc = new Date(Date.UTC(2026, 10, 1, 9, 34, 56));
 const umi = new UmiTime(utc);
 
 console.log(umi.umi);     // UTᵘ degrees (0–359)
@@ -92,23 +101,20 @@ UT‑only formats (e.g., `"235:038"`) are anchored to a stable epoch (`1970-01-0
 
 ### Solar Geometry
 
-The library includes a solar subsystem used for:
+The library exports solar-geometry helpers for computing UTᵘ values, solar altitude, and hour angles directly from the package root:
 
-- UTᵘ → UTC conversion
+```ts
+import { utUmiFromDate, solarAltitude, getHourAngle } from "umi-time";
 
-- UTC → UTᵘ conversion
+const date = new Date(Date.UTC(2026, 5, 21, 12, 0, 0));
+const utUmi = utUmiFromDate(date);                  // 270ᵘ
+const hourAngle = getHourAngle(utUmi, -120.6435, 0); // Pismo Beach, CA longitude
+const altitude = solarAltitude(date, 35.1387, -120.6435); // Pismo Beach, CA
+const altitude = solarAltitude(35.1387, 23.44, hourAngle);
 
-- Solar event computation (sunrise, sunset, solar noon)
 
-- Solar position (altitude, azimuth)
 
-These functions live in:
-
-- `solar/core/`
-
-- `solar/utils/`
-
-and are used internally by `UmiTime`.
+```
 
 ### Project Structure
 
