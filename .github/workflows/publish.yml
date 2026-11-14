@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Publish to npm & JSR
 
 on:
   release:
@@ -20,10 +20,10 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
-          
+
       # Upgrade npm globally to support staged publishing
       - name: Upgrade npm CLI
-        run: npm i -g npm@11.15.0          
+        run: npm i -g npm@11.15.0
 
       - name: Install Dependencies
         run: npm ci
@@ -36,3 +36,6 @@ jobs:
 
       - name: Stage Package via Trusted Publishing
         run: npm stage publish
+
+      - name: Publish to JSR
+        run: npx jsr publish
